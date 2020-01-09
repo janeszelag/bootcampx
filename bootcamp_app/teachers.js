@@ -1,5 +1,4 @@
 const { Pool } = require('pg');
-//const arg = process.argv.slice(2);
 
 const pool = new Pool({
   user: 'vagrant',
@@ -8,31 +7,40 @@ const pool = new Pool({
   database: 'bootcampx'
 });
 
-// const cohortName = arg[0];
-// console.log(cohortName);
+const cohortName = process.argv[2];
+console.log(cohortName);
+// Store all potentially malicious values in an array. 
+const values = [cohortName];
+console.log(values);
 
-pool.query(`
+const queryString = `
 SELECT DISTINCT teachers.name as teacher, cohorts.name as cohort
 FROM teachers
 JOIN assistance_requests ON teacher_id = teachers.id
 JOIN students ON student_id = students.id
 JOIN cohorts ON cohort_id = cohorts.id
-WHERE cohorts.name = '${process.argv[2] || 'JUL02'}'
+WHERE cohorts.name = $1
 ORDER BY teacher;
-`)
+`;
+
+
+pool.query(queryString, values)
 .then(res => {
   res.rows.forEach(row => {
     console.log(`${row.cohort}: ${row.teacher}`);
   })
+})
+.catch(err => {
+  console.log(err)
 });
 
 // pool.query(`
 // SELECT DISTINCT teachers.name as teacher, cohorts.name as cohort
 // FROM assistance_requests
-// JOIN teachers ON teachers.id = assistance_requests.teacher_id
+// JOIN teachers ON teachers.id = teacher_id
 // JOIN students ON students.id = student_id
 // JOIN cohorts ON cohorts.id = cohort_id
-// WHERE cohorts.name = ${cohortName};
+// WHERE cohorts.name = '${cohortName}'
 // ORDER BY teacher;
 // `)
 // .then(res => {
@@ -40,3 +48,4 @@ ORDER BY teacher;
 //     console.log(`${row.cohort}: ${row.teacher}`);
 //   })
 // });
+
